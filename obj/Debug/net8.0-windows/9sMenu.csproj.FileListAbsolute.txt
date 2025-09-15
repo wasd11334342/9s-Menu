@@ -1,0 +1,16 @@
+C:\Users\user\source\repos\9sMenu\9sMenu\bin\Debug\net8.0-windows\9sMenu.exe
+C:\Users\user\source\repos\9sMenu\9sMenu\bin\Debug\net8.0-windows\9sMenu.deps.json
+C:\Users\user\source\repos\9sMenu\9sMenu\bin\Debug\net8.0-windows\9sMenu.runtimeconfig.json
+C:\Users\user\source\repos\9sMenu\9sMenu\bin\Debug\net8.0-windows\9sMenu.dll
+C:\Users\user\source\repos\9sMenu\9sMenu\bin\Debug\net8.0-windows\9sMenu.pdb
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\_9sMenu.Form1.resources
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\9sMenu.csproj.GenerateResource.cache
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\9sMenu.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\9sMenu.AssemblyInfoInputs.cache
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\9sMenu.AssemblyInfo.cs
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\9sMenu.csproj.CoreCompileInputs.cache
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\9sMenu.dll
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\refint\9sMenu.dll
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\9sMenu.pdb
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\9sMenu.genruntimeconfig.cache
+C:\Users\user\source\repos\9sMenu\9sMenu\obj\Debug\net8.0-windows\ref\9sMenu.dll
