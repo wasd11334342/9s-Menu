@@ -1,5 +1,7 @@
+using DllInjectorExample;
 using System;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 
 namespace _9sMenu
@@ -8,7 +10,8 @@ namespace _9sMenu
     {
         private System.Windows.Forms.Timer timer;
         private Dictionary<string, Process> runningProcesses = new Dictionary<string, Process>();
-
+        private int lastSelectedPid = -1;
+        private string dllPath = "dll_test.dll";
         public Form1()
         {
             InitializeComponent();
@@ -96,21 +99,62 @@ namespace _9sMenu
 
         private void UpdateProcessList()
         {
-            listBox1.Items.Clear(); // Clear the existing items
-
-            // Get all processes
-            Process[] processes = Process.GetProcesses();
-
-            foreach (Process process in processes)
+            try
             {
-                // Check if the process name is "9s"
-                if (process.ProcessName.Equals("9s", StringComparison.OrdinalIgnoreCase))
+                int selectedPid = lastSelectedPid;
+
+                // 取得當前進程列表，並篩選 ProcessName 為 "9s" 的進程
+                var currentProcesses = Process.GetProcesses()
+                    .Where(p => p.ProcessName.Equals("9s", StringComparison.OrdinalIgnoreCase))
+                    .ToDictionary(p => p.Id, p => p.MainWindowTitle);
+
+                var currentPids = currentProcesses.Keys.ToHashSet();
+
+                // 移除已不存在的 PID
+                for (int i = listBox1.Items.Count - 1; i >= 0; i--)
                 {
-                    // Add the process ID to the ListBox
-                    listBox1.Items.Add($"{process.MainWindowTitle} {process.Id.ToString()}");
+                    string item = (string)listBox1.Items[i];
+                    string[] parts = item.Split(' ');
+                    if (parts.Length > 1 && int.TryParse(parts[parts.Length - 1].Trim(), out int pid))
+                    {
+                        if (!currentPids.Contains(pid))
+                        {
+                            listBox1.Items.RemoveAt(i);
+                        }
+                    }
+                }
+
+                // 添加新出現的 PID
+                foreach (int pid in currentPids)
+                {
+                    string item = $"{currentProcesses[pid]} {pid}";
+                    if (!listBox1.Items.Cast<string>().Contains(item))
+                    {
+                        listBox1.Items.Add(item);
+                    }
+                }
+
+                // 恢復選取狀態
+                if (selectedPid != -1)
+                {
+                    string selectedItem = listBox1.Items.Cast<string>().FirstOrDefault(item => item.EndsWith($" {selectedPid}"));
+                    if (selectedItem != null)
+                    {
+                        listBox1.SelectedItem = selectedItem;
+                    }
+                    else
+                    {
+                        LogMessage($"選取的 PID {selectedPid} 已不存在");
+                        lastSelectedPid = -1;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                LogMessage($"更新進程列表失敗: {ex.Message}");
+            }
         }
+
 
         // Make sure to dispose of the timer when the form is closing
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -126,10 +170,11 @@ namespace _9sMenu
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            richTextBox1.Multiline = true;                             //顯示多行
+            richTextBox1.ScrollBars = RichTextBoxScrollBars.Vertical;　//只顯示垂直滾動
         }
 
-        
+
 
         private void button2_Click(object sender, EventArgs e)
         {
@@ -141,8 +186,10 @@ namespace _9sMenu
             if (listBox1.SelectedItem != null)
             {
                 // 獲取 ListBox 中選中的項目（它是字串格式的 PID）
-                string selectedPid = listBox1.SelectedItem.ToString();
-                textBox1.Text = selectedPid;
+                string[] selectedPid = listBox1.SelectedItem.ToString().Split(' ');
+                textBox1.Text = selectedPid[1];
+                LogMessage($"選取 PID: {selectedPid[1]}");
+
             }
         }
 
@@ -175,7 +222,8 @@ namespace _9sMenu
                 runningProcesses[id] = process;
 
                 process.EnableRaisingEvents = true;
-                process.Exited += (sender, e) => {
+                process.Exited += (sender, e) =>
+                {
                     // 程序結束時移除記錄
                     if (runningProcesses.ContainsKey(id))
                     {
@@ -183,7 +231,8 @@ namespace _9sMenu
                     }
 
                     // 更新UI（需要跨線程調用）
-                    this.Invoke(new Action(() => {
+                    this.Invoke(new Action(() =>
+                    {
                         UpdateButtonState();
                     }));
                 };
@@ -225,5 +274,58 @@ namespace _9sMenu
             }
         }
 
+
+        // 單一程序注入
+        private void button2_Click_1(object sender, EventArgs e)
+        {   
+
+            if (listBox1.SelectedIndex == -1)
+            {
+                LogMessage("未選擇要注入的PID");
+            }
+            else
+            {
+                string selectedValue = listBox1.SelectedItem.ToString();
+                // 用PID list的第二個數值，也就是PID
+                int pid = int.Parse(selectedValue.Split(' ')[1]);
+                bool success = DllInjector.InjectDll(pid, dllPath, LogMessage);
+                MessageBox.Show(success ? "DLL 注入成功！" : "DLL 注入失敗！",
+                    success ? "成功" : "錯誤",
+                    MessageBoxButtons.OK,
+                    success ? MessageBoxIcon.Information : MessageBoxIcon.Error);
+            }
+                
+        }
+
+        // 顯示log
+        private void LogMessage(string message)
+        {
+            richTextBox1.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
+        }
+
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (listBox1.SelectedIndex == -1)
+            {
+                LogMessage("未選擇要取消注入的PID");
+            }
+            else
+            {
+                string selectedValue = listBox1.SelectedItem.ToString();
+                // 用PID list的第二個數值，也就是PID
+                int pid = int.Parse(selectedValue.Split(' ')[1]);
+                bool success = DllInjector.EjectDll(pid, dllPath, LogMessage);
+                MessageBox.Show(success ? "DLL 卸載成功！" : "DLL 卸載失敗！",
+                    success ? "成功" : "錯誤",
+                    MessageBoxButtons.OK,
+                    success ? MessageBoxIcon.Information : MessageBoxIcon.Error);
+            }
+                
+        }
     }
 }
